@@ -7,7 +7,6 @@ export default {
       return new Response('Missing ?url= parameter. Use: ?url=https://reddit.com/r/...', { status: 400 });
     }
 
-    // Only allow Reddit requests (security)
     if (!targetUrl.includes('reddit.com')) {
       return new Response('Only reddit.com requests are allowed', { status: 403 });
     }
