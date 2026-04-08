@@ -1,21 +1,34 @@
 export default {
-    async fetch(request) {
-        // Get the real URL from the 'url' parameter
-        const url = new URL(request.url);
-        const targetUrl = url.searchParams.get('url');
+  async fetch(request) {
+    const url = new URL(request.url);
+    const targetUrl = url.searchParams.get('url');
 
-        if (!targetUrl) {
-            return new Response('Missing ?url= parameter', { status: 400 });
-        }
+    if (!targetUrl) {
+      return new Response('Missing ?url= parameter. Usage: ?url=https://example.com', { status: 400 });
+    }
 
-        // Fetch the real data from Reddit
-        const response = await fetch(targetUrl, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (compatible; CloudflareWorker/1.0)',
-            },
-        });
+    
+    if (!targetUrl.includes('reddit.com')) {
+      return new Response('Only reddit.com requests are allowed', { status: 403 });
+    }
 
-        // Create a new response with CORS headers (allows your page to read it)
+    try {
+      const response = await fetch(targetUrl, {
+        headers: {
+          'User-Agent': 'CloudflareWorker/1.0',
+        },
+      });
+
+      const newResponse = new Response(response.body, response);
+      newResponse.headers.set('Access-Control-Allow-Origin', '*');
+      newResponse.headers.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+
+      return newResponse;
+    } catch (err) {
+      return new Response(`Error: ${err.message}`, { status: 500 });
+    }
+  },
+};
         const newResponse = new Response(response.body, response);
         newResponse.headers.set('Access-Control-Allow-Origin', '*');
 
