@@ -4,10 +4,10 @@ export default {
     const targetUrl = url.searchParams.get('url');
 
     if (!targetUrl) {
-      return new Response('Missing ?url= parameter. Usage: ?url=https://example.com', { status: 400 });
+      return new Response('Missing ?url= parameter. Use: ?url=https://reddit.com/r/...', { status: 400 });
     }
 
-    
+    // Only allow Reddit requests (security)
     if (!targetUrl.includes('reddit.com')) {
       return new Response('Only reddit.com requests are allowed', { status: 403 });
     }
@@ -28,10 +28,4 @@ export default {
       return new Response(`Error: ${err.message}`, { status: 500 });
     }
   },
-};
-        const newResponse = new Response(response.body, response);
-        newResponse.headers.set('Access-Control-Allow-Origin', '*');
-
-        return newResponse;
-    },
 };
