@@ -4,27 +4,37 @@ export default {
     const targetUrl = url.searchParams.get('url');
 
     if (!targetUrl) {
-      return new Response('Missing ?url= parameter. Use: ?url=https://reddit.com/r/...', { status: 400 });
+      return new Response('Missing ?url= parameter', { status: 400 });
     }
 
     if (!targetUrl.includes('reddit.com')) {
       return new Response('Only reddit.com requests are allowed', { status: 403 });
     }
 
-    try {
-      const response = await fetch(targetUrl, {
+    const cache = caches.default;
+    let response = await cache.match(request);
+
+    if (!response) {
+      response = await fetch(targetUrl, {
         headers: {
-          'User-Agent': 'CloudflareWorker/1.0',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
         },
       });
 
-      const newResponse = new Response(response.body, response);
-      newResponse.headers.set('Access-Control-Allow-Origin', '*');
-      newResponse.headers.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+      const headers = new Headers(response.headers);
+      headers.set('Cache-Control', 'public, max-age=3600');
+      
+      response = new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: headers,
+      });
 
-      return newResponse;
-    } catch (err) {
-      return new Response(`Error: ${err.message}`, { status: 500 });
+      await cache.put(request, response.clone());
     }
+
+    const newResponse = new Response(response.body, response);
+    newResponse.headers.set('Access-Control-Allow-Origin', '*');
+    return newResponse;
   },
 };
